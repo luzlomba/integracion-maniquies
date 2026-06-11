@@ -1,0 +1,70 @@
+Table material {
+  id_material integer [primary key]
+  nombre varchar
+}
+
+Table color {
+  id_color integer [primary key]
+  nombre varchar
+}
+
+Table modelo_pieza {
+  id_modelo integer [primary key]
+  tipo varchar
+  genero varchar
+  talle varchar
+  id_material integer [ref: > material.id_material]
+  id_color integer [ref: > color.id_color]
+}
+
+Table modelo_extremidad {
+  id_modelo integer [primary key]
+  tipo varchar
+  lado varchar
+  id_material integer [ref: > material.id_material]
+  id_color integer [ref: > color.id_color]
+}
+
+Table cabeza {
+  id_cabeza integer [primary key]
+  tipo varchar
+  nro_serie varchar
+  fecha_fabricacion date
+  id_modelo integer [ref: > modelo_pieza.id_modelo]
+}
+
+Table torso {
+  id_torso integer [primary key]
+  tipo varchar
+  nro_serie varchar
+  fecha_fabricacion date
+  id_modelo integer [ref: > modelo_pieza.id_modelo]
+}
+
+Table brazo {
+  id_brazo integer [primary key]
+  tipo varchar
+  nro_serie varchar
+  fecha_fabricacion date
+  id_modelo integer [ref: > modelo_extremidad.id_modelo]
+}
+
+Table pierna {
+  id_pierna integer [primary key]
+  tipo varchar
+  nro_serie varchar
+  fecha_fabricacion date
+  id_modelo integer [ref: > modelo_extremidad.id_modelo]
+}
+
+Table maniqui {
+  id_maniqui integer [primary key]
+  codigo varchar
+  fecha_ensamblaje date
+  id_cabeza integer [ref: > cabeza.id_cabeza]
+  id_torso integer [ref: > torso.id_torso]
+  id_brazo_izq integer [ref: > brazo.id_brazo]
+  id_brazo_der integer [ref: > brazo.id_brazo]
+  id_pierna_izq integer [ref: > pierna.id_pierna]
+  id_pierna_der integer [ref: > pierna.id_pierna]
+}

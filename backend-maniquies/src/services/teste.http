@@ -1,0 +1,131 @@
+### Obtener todos los maniquies
+GET http://localhost:3000/maniquies
+
+### Obtener un maniqui por id
+GET http://localhost:3000/maniquies/1
+
+### Obtener todas las cabezas
+GET http://localhost:3000/cabezas
+
+### Obtener todos los torsos
+GET http://localhost:3000/torsos
+
+### Obtener todos los brazos
+GET http://localhost:3000/brazos
+
+### Obtener todas las piernas
+GET http://localhost:3000/piernas
+
+### Obtener materiales
+GET http://localhost:3000/materiales
+
+### Obtener colores
+GET http://localhost:3000/colores
+
+### Crear una cabeza
+POST http://localhost:3000/cabezas
+Content-Type: application/json
+
+{
+  "tipo": "cabeza",
+  "nro_serie": "CAB-004",
+  "fecha_fabricacion": "2026-05-01",
+  "id_modelo": 1
+}
+
+### Actualizar una cabeza
+PUT http://localhost:3000/cabezas/1
+Content-Type: application/json
+
+{
+  "nro_serie": "CAB-001-MOD"
+}
+
+### Eliminar una cabeza
+DELETE http://localhost:3000/cabezas/3
+
+### Crear un maniqui
+POST http://localhost:3000/maniquies
+Content-Type: application/json
+
+{
+  "codigo": "MAN-003",
+  "fecha_ensamblaje": "2026-05-19",
+  "id_cabeza": 3,
+  "id_torso": 3,
+  "id_brazo_izq": 1,
+  "id_brazo_der": 2,
+  "id_pierna_izq": 1,
+  "id_pierna_der": 2
+}
+
+### Obtener todos los modelos de pieza
+GET http://localhost:3000/modelos-pieza
+
+### Obtener todos los modelos de extremidad
+GET http://localhost:3000/modelos-extremidad
+
+### Obtener un modelo de pieza por id
+GET http://localhost:3000/modelos-pieza/1
+
+### Crear un modelo de pieza
+POST http://localhost:3000/modelos-pieza
+Content-Type: application/json
+
+{
+  "tipo": "cabeza",
+  "genero": "Femenino",
+  "talle": "L",
+  "id_material": 2,
+  "id_color": 3
+}
+
+### Crear un modelo de extremidad
+POST http://localhost:3000/modelos-extremidad
+Content-Type: application/json
+
+{
+  "tipo": "brazo",
+  "lado": "izquierdo",
+  "id_material": 1,
+  "id_color": 2
+}
+
+### Obtener todos los materiales
+GET http://localhost:3000/materiales
+
+### Obtener un material por id
+GET http://localhost:3000/materiales/1
+
+### Crear un material
+POST http://localhost:3000/materiales
+Content-Type: application/json
+
+{
+  "nombre": "Aluminio"
+}
+
+### Actualizar un material
+PUT http://localhost:3000/materiales/1
+Content-Type: application/json
+
+{
+  "nombre": "Plastico ABS"
+}
+
+### Eliminar un material
+DELETE http://localhost:3000/materiales/1
+
+### Obtener todos los colores
+GET http://localhost:3000/colores
+
+### Crear un color
+POST http://localhost:3000/colores
+Content-Type: application/json
+
+{
+  "nombre": "Negro Mate"
+}
+
+### Eliminar un color
+DELETE http://localhost:3000/colores/6
