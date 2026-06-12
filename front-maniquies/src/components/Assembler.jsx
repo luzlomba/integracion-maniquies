@@ -1,12 +1,10 @@
 import { useState } from 'react'
 
-function Assembler({ stockDisponible, cabezas, torsos, brazos, piernas, modelosPieza, modelosExtremidad, materiales, colores, maniquies, setManiquies }) {
+function Assembler({ stockDisponible, cabezas, torsos, brazos, piernas, modelosPieza, modelosExtremidad, materiales, colores, maniquies, setManiquies, onAssemble }) {
   const [selection, setSelection] = useState({
     id_cabeza: null, id_torso: null, id_brazo_izq: null, id_brazo_der: null, id_pierna_izq: null, id_pierna_der: null
   })
   const [openSection, setOpenSection] = useState(null)
-  
-  // Estados para los filtros
   const [filterColor, setFilterColor] = useState('todos')
   const [filterMaterial, setFilterMaterial] = useState('todos')
 
@@ -18,16 +16,12 @@ function Assembler({ stockDisponible, cabezas, torsos, brazos, piernas, modelosP
     setOpenSection(openSection === section ? null : section)
   }
 
-  // Lógica de filtrado por atributos
   const filterByAttributes = (lista) => {
     return lista.filter(p => {
-      // Obtenemos el modelo de la pieza (según si es extremidad o pieza principal)
-      const modelo = modelosPieza.find(m => m.id_modelo === p.id_modelo) || 
-                     modelosExtremidad.find(m => m.id_modelo === p.id_modelo);
-      
+      const modelo = modelosPieza.find(m => m.id_modelo === p.id_modelo) ||
+        modelosExtremidad.find(m => m.id_modelo === p.id_modelo);
       const matchColor = filterColor === 'todos' || modelo?.id_color === parseInt(filterColor);
       const matchMaterial = filterMaterial === 'todos' || modelo?.id_material === parseInt(filterMaterial);
-      
       return matchColor && matchMaterial;
     });
   };
@@ -52,15 +46,13 @@ function Assembler({ stockDisponible, cabezas, torsos, brazos, piernas, modelosP
 
   const handleAssemble = () => {
     if (Object.values(selection).includes(null)) return alert('Debés completar todas las piezas')
-    setManiquies([...maniquies, { id_maniqui: Date.now(), ...selection }])
+    onAssemble(selection)
     setSelection({ id_cabeza: null, id_torso: null, id_brazo_izq: null, id_brazo_der: null, id_pierna_izq: null, id_pierna_der: null })
   }
 
   return (
     <div className="assembler">
       <h2>Ensamblador</h2>
-      
-      {/* Filtros */}
       <div className="filters">
         <select onChange={(e) => setFilterColor(e.target.value)}>
           <option value="todos">Todos los colores</option>
@@ -100,13 +92,13 @@ function Assembler({ stockDisponible, cabezas, torsos, brazos, piernas, modelosP
         </div>
         
         <div className="assembler-right">
-            <h3>Maniquí en construcción</h3>
-            <p>Cabeza: {getSer(cabezas, selection.id_cabeza, 'id_cabeza')}</p>
-            <p>Torso: {getSer(torsos, selection.id_torso, 'id_torso')}</p>
-            <p>Brazo izq: {getSer(brazos, selection.id_brazo_izq, 'id_brazo')}</p>
-            <p>Brazo der: {getSer(brazos, selection.id_brazo_der, 'id_brazo')}</p>
-            <p>Pierna izq: {getSer(piernas, selection.id_pierna_izq, 'id_pierna')}</p>
-            <p>Pierna der: {getSer(piernas, selection.id_pierna_der, 'id_pierna')}</p>
+          <h3>Maniquí en construcción</h3>
+          <p>Cabeza: {getSer(cabezas, selection.id_cabeza, 'id_cabeza')}</p>
+          <p>Torso: {getSer(torsos, selection.id_torso, 'id_torso')}</p>
+          <p>Brazo izq: {getSer(brazos, selection.id_brazo_izq, 'id_brazo')}</p>
+          <p>Brazo der: {getSer(brazos, selection.id_brazo_der, 'id_brazo')}</p>
+          <p>Pierna izq: {getSer(piernas, selection.id_pierna_izq, 'id_pierna')}</p>
+          <p>Pierna der: {getSer(piernas, selection.id_pierna_der, 'id_pierna')}</p>
         </div>
       </div>
       <button className="assemble-btn" onClick={handleAssemble}>Ensamblar Maniquí</button>

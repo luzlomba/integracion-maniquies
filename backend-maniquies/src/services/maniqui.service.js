@@ -10,6 +10,7 @@ const getManiquiById = async (id) => {
 }
 
 const createManiqui = async (data) => {
+  // Validar que existan todas las piezas (Lógica de negocio)
   const cabeza = await findPieza('cabezas', data.id_cabeza)
   if (!cabeza) throw new Error('Cabeza no encontrada')
   const torso = await findPieza('torsos', data.id_torso)
@@ -22,6 +23,8 @@ const createManiqui = async (data) => {
   if (!piernaIzq) throw new Error('Pierna izquierda no encontrada')
   const piernaDer = await findPieza('piernas', data.id_pierna_der)
   if (!piernaDer) throw new Error('Pierna derecha no encontrada')
+
+  // Delegar la creación (y la generación del código) al modelo
   return create(data)
 }
 

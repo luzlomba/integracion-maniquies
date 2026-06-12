@@ -14,13 +14,29 @@ export const findById = async (id) => {
 }
 
 export const create = async (data) => {
-  const { codigo, fecha_ensamblaje, id_cabeza, id_torso, id_brazo_izq, id_brazo_der, id_pierna_izq, id_pierna_der } = data
+  const { id_cabeza, id_torso, id_brazo_izq, id_brazo_der, id_pierna_izq, id_pierna_der } = data
+  
+  // 1. Insertamos con un código temporal ('TEMP') y la fecha actual de MySQL (CURDATE())
   const [result] = await connection.execute(
     `INSERT INTO maniqui (codigo, fecha_ensamblaje, id_cabeza, id_torso, id_brazo_izq, id_brazo_der, id_pierna_izq, id_pierna_der) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [codigo, fecha_ensamblaje, id_cabeza, id_torso, id_brazo_izq, id_brazo_der, id_pierna_izq, id_pierna_der]
+     VALUES ('TEMP', CURDATE(), ?, ?, ?, ?, ?, ?)`,
+    [id_cabeza, id_torso, id_brazo_izq, id_brazo_der, id_pierna_izq, id_pierna_der]
   )
-  return findById(result.insertId)
+
+  // 2. Obtenemos el ID que MySQL acaba de generar automáticamente
+  const nuevoId = result.insertId
+  
+  // 3. Generamos el código real basado en ese ID único
+  const codigoReal = `MAN-${String(nuevoId).padStart(3, '0')}`
+
+  // 4. Actualizamos el registro con el código definitivo
+  await connection.execute(
+    `UPDATE maniqui SET codigo = ? WHERE id_maniqui = ?`,
+    [codigoReal, nuevoId]
+  )
+
+  // 5. Retornamos el maniquí completo ya actualizado
+  return findById(nuevoId)
 }
 
 export const update = async (id, data) => {

@@ -1,4 +1,5 @@
 import { findAll, findById, create, update, deleteElement } from '../models/pieza.model.js'
+import connection from '../db/dbConnect.js'
 
 const getAllPiezas = async (tipo) => findAll(tipo)
 
@@ -17,9 +18,43 @@ const updatePieza = async (tipo, id, data) => {
 }
 
 const deletePieza = async (tipo, id) => {
-  const deleted = await deleteElement(tipo, id)
-  if (!deleted) throw new Error('Pieza no encontrada')
-  return deleted
+  const pieza = await findById(tipo, id)
+  if (!pieza) throw new Error('Pieza no encontrada')
+  
+  // Validar si la pieza está en uso por algún maniquí
+  const estaEnUso = await verificarSiEstaEnUso(tipo, id)
+  if (estaEnUso) {
+    throw new Error('No se puede eliminar la pieza porque está siendo usada por un maniquí')
+  }
+  
+  return deleteElement(tipo, id)
+}
+
+// Función auxiliar para verificar si una pieza está en uso
+const verificarSiEstaEnUso = async (tipo, id) => {
+  let query = ''
+  
+  switch(tipo) {
+    case 'cabezas':
+      query = 'SELECT COUNT(*) as count FROM maniqui WHERE id_cabeza = ?'
+      break
+    case 'torsos':
+      query = 'SELECT COUNT(*) as count FROM maniqui WHERE id_torso = ?'
+      break
+    case 'brazos':
+      query = 'SELECT COUNT(*) as count FROM maniqui WHERE id_brazo_izq = ? OR id_brazo_der = ?'
+      break
+    case 'piernas':
+      query = 'SELECT COUNT(*) as count FROM maniqui WHERE id_pierna_izq = ? OR id_pierna_der = ?'
+      break
+    default:
+      return false
+  }
+  
+  const params = tipo === 'brazos' || tipo === 'piernas' ? [id, id] : [id]
+  const [rows] = await connection.query(query, params)
+  
+  return rows[0].count > 0
 }
 
 export default { getAllPiezas, getPiezaById, createPieza, updatePieza, deletePieza }

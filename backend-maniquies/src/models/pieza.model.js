@@ -1,45 +1,61 @@
 import connection from '../db/dbConnect.js'
 
-const getTable = (tipo) => tipo.slice(0, -1)
-const getIdKey = (tipo) => `id_${tipo.slice(0, -1)}`
+// Helper para mapear el tipo de ruta al nombre real de la tabla y su ID
+const getTableInfo = (tipo) => {
+  const map = {
+    'cabezas': { table: 'cabeza', idField: 'id_cabeza' },
+    'torsos': { table: 'torso', idField: 'id_torso' },
+    'brazos': { table: 'brazo', idField: 'id_brazo' },
+    'piernas': { table: 'pierna', idField: 'id_pierna' }
+  }
+  return map[tipo]
+}
 
 export const findAll = async (tipo) => {
-  const [rows] = await connection.query(`SELECT * FROM ${getTable(tipo)}`)
+  const { table } = getTableInfo(tipo)
+  const [rows] = await connection.query(`SELECT * FROM ${table}`)
   return rows
 }
 
 export const findById = async (tipo, id) => {
-  const [rows] = await connection.query(
-    `SELECT * FROM ${getTable(tipo)} WHERE ${getIdKey(tipo)} = ?`,
-    [id]
-  )
+  const { table, idField } = getTableInfo(tipo)
+  const [rows] = await connection.query(`SELECT * FROM ${table} WHERE ${idField} = ?`, [id])
   return rows[0] || null
 }
 
 export const create = async (tipo, data) => {
-  const { nro_serie, fecha_fabricacion, id_modelo } = data
+  const { table, idField } = getTableInfo(tipo)
+  
+  // NOTA: Por ahora insertamos los datos básicos. 
+  // Más adelante veremos cómo generar el id_modelo automáticamente.
   const [result] = await connection.execute(
-    `INSERT INTO ${getTable(tipo)} (tipo, nro_serie, fecha_fabricacion, id_modelo) VALUES (?, ?, ?, ?)`,
-    [tipo.slice(0, -1), nro_serie, fecha_fabricacion, id_modelo]
+    `INSERT INTO ${table} (tipo, nro_serie, fecha_fabricacion, id_modelo) 
+     VALUES (?, ?, ?, ?)`,
+    [data.tipo, data.nro_serie, data.fecha_fabricacion, data.id_modelo]
   )
+  
   return findById(tipo, result.insertId)
 }
 
 export const update = async (tipo, id, data) => {
-  const { nro_serie, fecha_fabricacion, id_modelo } = data
+  const { table, idField } = getTableInfo(tipo)
+  
   await connection.execute(
-    `UPDATE ${getTable(tipo)} SET nro_serie = ?, fecha_fabricacion = ?, id_modelo = ? WHERE ${getIdKey(tipo)} = ?`,
-    [nro_serie, fecha_fabricacion, id_modelo, id]
+    `UPDATE ${table} 
+     SET nro_serie = ?, fecha_fabricacion = ?, id_modelo = ? 
+     WHERE ${idField} = ?`,
+    [data.nro_serie, data.fecha_fabricacion, data.id_modelo, id]
   )
+  
   return findById(tipo, id)
 }
 
 export const deleteElement = async (tipo, id) => {
+  const { table, idField } = getTableInfo(tipo)
+  
   const item = await findById(tipo, id)
   if (!item) return null
-  await connection.execute(
-    `DELETE FROM ${getTable(tipo)} WHERE ${getIdKey(tipo)} = ?`,
-    [id]
-  )
+  
+  await connection.execute(`DELETE FROM ${table} WHERE ${idField} = ?`, [id])
   return item
 }

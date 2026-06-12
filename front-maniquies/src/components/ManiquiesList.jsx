@@ -14,15 +14,15 @@ function ManiquiesList({ maniquies, cabezas, torsos, brazos, piernas, modelosExt
             <th>Brazo der.</th>
             <th>Pierna izq.</th>
             <th>Pierna der.</th>
-            <th>Acciones</th> {/* Nueva columna */}
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {maniquies.map((maniqui) => (
-            <ManiquiRow 
-              key={maniqui.id_maniqui} 
-              maniqui={maniqui} 
-              maniquies={maniquies} // Lo necesitamos para saber qué piezas están libres
+            <ManiquiRow
+              key={maniqui.id_maniqui}
+              maniqui={maniqui}
+              maniquies={maniquies}
               cabezas={cabezas}
               torsos={torsos}
               brazos={brazos}

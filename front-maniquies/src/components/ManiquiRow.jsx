@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatearFecha } from '../utils/fecha'
 
 function ManiquiRow({ maniqui, maniquies, cabezas, torsos, brazos, piernas, modelosExtremidad, onDelete, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false)
@@ -41,9 +42,22 @@ function ManiquiRow({ maniqui, maniquies, cabezas, torsos, brazos, piernas, mode
   }
 
   const handleSave = () => {
-    onUpdate(editForm)
-    setIsEditing(false)
+  // Formatear la fecha a YYYY-MM-DD
+  let fechaFormateada = editForm.fecha_ensamblaje
+  
+  if (fechaFormateada instanceof Date || (typeof fechaFormateada === 'string' && fechaFormateada.includes('T'))) {
+    const date = new Date(fechaFormateada)
+    fechaFormateada = date.toISOString().split('T')[0]
   }
+  
+  const datosFormateados = {
+    ...editForm,
+    fecha_ensamblaje: fechaFormateada
+  }
+  
+  onUpdate(datosFormateados)
+  setIsEditing(false)
+}
 
   const handleCancel = () => {
     setEditForm({ ...maniqui })
@@ -60,7 +74,7 @@ function ManiquiRow({ maniqui, maniquies, cabezas, torsos, brazos, piernas, mode
   return (
     <tr>
       <td>{maniqui.codigo}</td>
-      <td>{maniqui.fecha_ensamblaje}</td>
+      <td>{formatearFecha(maniqui.fecha_ensamblaje)}</td>
 
       {isEditing ? (
         <>
@@ -95,8 +109,8 @@ function ManiquiRow({ maniqui, maniquies, cabezas, torsos, brazos, piernas, mode
             </select>
           </td>
           <td>
-            <button onClick={handleSave} className="btn-save">Guardar</button>
-            <button onClick={handleCancel} className="btn-cancel">Cancelar</button>
+            <button onClick={handleSave} className="btn-action btn-save">Guardar</button>
+            <button onClick={handleCancel} className="btn-action btn-cancel">Cancelar</button>
           </td>
         </>
       ) : (
