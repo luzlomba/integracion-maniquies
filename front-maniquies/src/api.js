@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -43,17 +43,35 @@ export const maniquiAPI = {
   }),
 };
 
-export const piezasAPI = {
+/*export const piezasAPI = {
   getCabezas: () => apiRequest('/cabezas'),
   getTorsos: () => apiRequest('/torsos'),
   getBrazos: () => apiRequest('/brazos'),
   getPiernas: () => apiRequest('/piernas'),
-};
+};*/
 
 export const catalogoAPI = {
   getMateriales: () => apiRequest('/materiales'),
   getColores: () => apiRequest('/colores'),
-};
+
+  createMaterial: (material) => apiRequest('/materiales', {
+    method: 'POST',
+    body: JSON.stringify(material)
+  }),
+
+  deleteMaterial: (id) => apiRequest(`/materiales/${id}`, {
+    method: 'DELETE'
+  }),
+
+  createColor: (color) => apiRequest('/colores', {
+    method: 'POST',
+    body: JSON.stringify(color)
+  }),
+
+  deleteColor: (id) => apiRequest(`/colores/${id}`, {
+    method: 'DELETE'
+  })
+}
 
 export const modelosAPI = {
   getModelosPieza: () => apiRequest('/modelos-pieza'),

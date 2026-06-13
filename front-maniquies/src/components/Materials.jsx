@@ -1,18 +1,36 @@
 import { useState } from 'react'
+import { catalogoAPI } from '../api.js'
 
 function Materials({ materials, setMaterials }) {
   const [newMaterialName, setNewMaterialName] = useState('')
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
+
     if (!newMaterialName.trim()) return
-    setMaterials([...materials, { id_material: Date.now(), nombre: newMaterialName }])
-    setNewMaterialName('')
+
+    try {
+      const nuevoMaterial = await catalogoAPI.createMaterial({
+        nombre: newMaterialName
+      })
+
+      setMaterials([...materials, nuevoMaterial])
+      setNewMaterialName('')
+    } catch (err) {
+      console.error(err)
+      alert('Error al crear material')
+    }
   }
 
-  const handleDelete = (id) => {
-    setMaterials(materials.filter(m => m.id_material !== id))
-  }
+  const handleDelete = async (id) => {
+    try {
+      await catalogoAPI.deleteMaterial(id)
+      setMaterials(materials.filter(m => m.id_material !== id))
+    } catch (err) {
+      console.error(err)
+      alert('Error al eliminar material')
+    }
+}
 
   return (
     <div className="view-container">

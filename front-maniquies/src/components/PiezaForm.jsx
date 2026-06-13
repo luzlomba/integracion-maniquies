@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, modelosPieza, modelosExtremidad }) {
+function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, cabezas, torsos, brazos, piernas }) {
   const [formData, setFormData] = useState({
     nro_serie: '',
     fecha_fabricacion: new Date().toISOString().split('T')[0],
@@ -14,6 +14,39 @@ function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, mo
   const [genero, setGenero] = useState('unisex')
   const [loading, setLoading] = useState(false)
 
+  const generarNumeroSerie = (tipoPieza) => {
+    const prefijos = {
+      cabeza: 'CAB',
+      torso: 'TOR',
+      brazo: 'BRA',
+      pierna: 'PIE'
+    }
+
+    const listas = {
+      cabeza: cabezas,
+      torso: torsos,
+      brazo: brazos,
+      pierna: piernas
+    }
+
+    const lista = listas[tipoPieza] || []
+
+    const ultimoNumero = Math.max(
+      0,
+      ...lista.map(p => {
+        const partes = p.nro_serie.split('-')
+        return parseInt(partes[1]) || 0
+      })
+    )
+
+    const numero = String(ultimoNumero + 1).padStart(3, '0')
+
+    setFormData(prev => ({
+      ...prev,
+      nro_serie: `${prefijos[tipoPieza]}-${numero}`,
+      tipo: tipoPieza
+    }))
+  } 
   // Cargar datos si estamos editando
   useEffect(() => {
     if (piezaEditar) {
@@ -34,13 +67,6 @@ function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, mo
       generarNumeroSerie(tipo || 'cabeza')
     }
   }, [piezaEditar, tipo])
-
-  const generarNumeroSerie = (tipoPieza) => {
-    const prefijos = { cabeza: 'CAB', torso: 'TOR', brazo: 'BRA', pierna: 'PIE' }
-    const prefijo = prefijos[tipoPieza] || 'PIE'
-    const numero = String(Math.floor(Math.random() * 900) + 100)
-    setFormData(prev => ({ ...prev, nro_serie: `${prefijo}-${numero}`, tipo: tipoPieza }))
-  }
 
   const esExtremidad = formData.tipo === 'brazo' || formData.tipo === 'pierna'
 

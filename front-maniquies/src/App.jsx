@@ -113,25 +113,37 @@ function App() {
       try {
         await maniquiAPI.delete(id)
         setManiquies(maniquies.filter(m => m.id_maniqui !== id))
-      } catch (err) { alert('Error al eliminar el maniquí') }
+      } catch { alert('Error al eliminar el maniquí') }
     }
   }
 
   const handleUpdateManiqui = async (maniquiActualizado) => {
-  try {
-    await maniquiAPI.update(maniquiActualizado.id_maniqui, maniquiActualizado)
-    setManiquies(maniquies.map(m => m.id_maniqui === maniquiActualizado.id_maniqui ? maniquiActualizado : m))
-  } catch (err) { 
-    console.error('Error completo:', err)
-    alert(`Error al actualizar: ${err.message}`)
+    try {
+      let fechaFormateada = maniquiActualizado.fecha_ensamblaje
+      if (fechaFormateada && (fechaFormateada instanceof Date || typeof fechaFormateada === 'string' && fechaFormateada.includes('T'))) {
+        const date = new Date(fechaFormateada)
+        fechaFormateada = date.toISOString().split('T')[0]
+      }
+      const datosParaEnviar = {
+        ...maniquiActualizado,
+        fecha_ensamblaje: fechaFormateada
+      }
+      await maniquiAPI.update(maniquiActualizado.id_maniqui, datosParaEnviar)
+      setManiquies(maniquies.map(m =>
+        m.id_maniqui === maniquiActualizado.id_maniqui ? maniquiActualizado : m
+      ))
+    } catch (err) {
+      console.error('Error actualizando maniquí:', err)
+      alert('Error al actualizar el maniquí en la base de datos')
+    }
   }
-}
+
   const handleAssembleManiqui = async (selection) => {
     try {
       const nuevo = await maniquiAPI.create(selection)
       setManiquies([...maniquies, nuevo])
       alert('¡Maniquí ensamblado!')
-    } catch (err) { alert('Error al crear') }
+    } catch { alert('Error al crear') }
   }
 
   const handleNewPieza = (tipo) => { setTipoPieza(tipo || 'cabeza'); setPiezaEditar(null); setShowPiezaForm(true) }
@@ -150,71 +162,65 @@ function App() {
     }
   }
 
-  // ============================================
-  // FUNCIÓN CLAVE: Buscar o crear modelo automáticamente
-  // ============================================
   const handleSavePieza = async (formData) => {
-  try {
-    const esExtremidad = formData.tipo === 'brazo' || formData.tipo === 'pierna'
-    const modelosDisponibles = esExtremidad ? modelosExtremidad : modelosPieza
+    try {
+      const esExtremidad = formData.tipo === 'brazo' || formData.tipo === 'pierna'
+      const modelosDisponibles = esExtremidad ? modelosExtremidad : modelosPieza
 
-    // 1. Buscar si ya existe un modelo con estas características
-    let modelo = modelosDisponibles.find(m =>
-      m.id_color === formData.id_color &&
-      m.id_material === formData.id_material &&
-      (esExtremidad
-        ? m.lado === formData.lado
-        : m.talle === formData.talle && m.genero === formData.genero)
-    )
+      let modelo = modelosDisponibles.find(m =>
+        m.id_color === formData.id_color &&
+        m.id_material === formData.id_material &&
+        (esExtremidad
+          ? m.lado === formData.lado
+          : m.talle === formData.talle && m.genero === formData.genero)
+      )
 
-    // 2. Si NO existe, lo creamos automáticamente en la BD
-    if (!modelo) {
-      const nuevoModeloData = {
+      if (!modelo) {
+        const nuevoModeloData = {
+          tipo: formData.tipo,
+          id_color: formData.id_color,
+          id_material: formData.id_material,
+          ...(esExtremidad ? { lado: formData.lado } : { talle: formData.talle, genero: formData.genero })
+        }
+
+        if (esExtremidad) {
+          modelo = await modelosAPI.createModeloExtremidad(nuevoModeloData)
+          setModelosExtremidad(prev => [...prev, modelo])
+        } else {
+          modelo = await modelosAPI.createModeloPieza(nuevoModeloData)
+          setModelosPieza(prev => [...prev, modelo])
+        }
+      }
+
+      const datosParaGuardar = {
+        nro_serie: formData.nro_serie,
+        fecha_fabricacion: formData.fecha_fabricacion,
         tipo: formData.tipo,
-        id_color: formData.id_color,
-        id_material: formData.id_material,
-        ...(esExtremidad ? { lado: formData.lado } : { talle: formData.talle, genero: formData.genero })
+        id_modelo: modelo.id_modelo
       }
-      
-      if (esExtremidad) {
-        modelo = await modelosAPI.createModeloExtremidad(nuevoModeloData)
-        setModelosExtremidad(prev => [...prev, modelo])
+
+      const tipoEndpoint = formData.tipo + 's'
+
+      if (piezaEditar) {
+        const id = piezaEditar.id_cabeza || piezaEditar.id_torso || piezaEditar.id_brazo || piezaEditar.id_pierna
+        if (tipoEndpoint === 'cabezas') { const r = await piezaAPI.updateCabeza(id, datosParaGuardar); setCabezas(cabezas.map(p => p.id_cabeza === id ? { ...p, ...r } : p)) }
+        else if (tipoEndpoint === 'torsos') { const r = await piezaAPI.updateTorso(id, datosParaGuardar); setTorsos(torsos.map(p => p.id_torso === id ? { ...p, ...r } : p)) }
+        else if (tipoEndpoint === 'brazos') { const r = await piezaAPI.updateBrazo(id, datosParaGuardar); setBrazos(brazos.map(p => p.id_brazo === id ? { ...p, ...r } : p)) }
+        else if (tipoEndpoint === 'piernas') { const r = await piezaAPI.updatePierna(id, datosParaGuardar); setPiernas(piernas.map(p => p.id_pierna === id ? { ...p, ...r } : p)) }
       } else {
-        modelo = await modelosAPI.createModeloPieza(nuevoModeloData)
-        setModelosPieza(prev => [...prev, modelo])
+        if (tipoEndpoint === 'cabezas') { const r = await piezaAPI.createCabeza(datosParaGuardar); setCabezas([...cabezas, r]) }
+        else if (tipoEndpoint === 'torsos') { const r = await piezaAPI.createTorso(datosParaGuardar); setTorsos([...torsos, r]) }
+        else if (tipoEndpoint === 'brazos') { const r = await piezaAPI.createBrazo(datosParaGuardar); setBrazos([...brazos, r]) }
+        else if (tipoEndpoint === 'piernas') { const r = await piezaAPI.createPierna(datosParaGuardar); setPiernas([...piernas, r]) }
       }
-    }
 
-    // 3. Ahora sí, guardamos la pieza con el id_modelo correcto
-    const datosParaGuardar = {
-      nro_serie: formData.nro_serie,
-      fecha_fabricacion: formData.fecha_fabricacion,
-      tipo: formData.tipo,
-      id_modelo: modelo.id_modelo
+      setShowPiezaForm(false)
+      setPiezaEditar(null)
+    } catch (err) {
+      console.error('Error guardando pieza:', err)
+      alert('Error al guardar la pieza en la base de datos')
     }
-
-    const tipoEndpoint = formData.tipo + 's'
-    
-    if (piezaEditar) {
-      const id = piezaEditar.id_cabeza || piezaEditar.id_torso || piezaEditar.id_brazo || piezaEditar.id_pierna
-      if (tipoEndpoint === 'cabezas') { const r = await piezaAPI.updateCabeza(id, datosParaGuardar); setCabezas(cabezas.map(p => p.id_cabeza === id ? { ...p, ...r } : p)) }
-      else if (tipoEndpoint === 'torsos') { const r = await piezaAPI.updateTorso(id, datosParaGuardar); setTorsos(torsos.map(p => p.id_torso === id ? { ...p, ...r } : p)) }
-      else if (tipoEndpoint === 'brazos') { const r = await piezaAPI.updateBrazo(id, datosParaGuardar); setBrazos(brazos.map(p => p.id_brazo === id ? { ...p, ...r } : p)) }
-      else if (tipoEndpoint === 'piernas') { const r = await piezaAPI.updatePierna(id, datosParaGuardar); setPiernas(piernas.map(p => p.id_pierna === id ? { ...p, ...r } : p)) }
-    } else {
-      if (tipoEndpoint === 'cabezas') { const r = await piezaAPI.createCabeza(datosParaGuardar); setCabezas([...cabezas, r]) }
-      else if (tipoEndpoint === 'torsos') { const r = await piezaAPI.createTorso(datosParaGuardar); setTorsos([...torsos, r]) }
-      else if (tipoEndpoint === 'brazos') { const r = await piezaAPI.createBrazo(datosParaGuardar); setBrazos([...brazos, r]) }
-      else if (tipoEndpoint === 'piernas') { const r = await piezaAPI.createPierna(datosParaGuardar); setPiernas([...piernas, r]) }
-    }
-    
-    setShowPiezaForm(false)
-    setPiezaEditar(null)
-  } catch (err) {
-    console.error('Error guardando pieza:', err)
-    alert('Error al guardar la pieza en la base de datos')
   }
-}
 
   if (loading) return <div className="layout"><Sidebar setView={setView} /><main className="content"><h1>Cargando...</h1></main></div>
   if (error) return <div className="layout"><Sidebar setView={setView} /><main className="content"><h1 style={{color:'red'}}>{error}</h1></main></div>
@@ -273,22 +279,42 @@ function App() {
           />
         )}
 
-        {view === 'inicio' && <Dashboard maniquies={maniquies} stockDisponible={stockDisponible} />}
-        {view === 'colores' && <Colors colors={colores} setColors={setColores} />}
-        {view === 'materiales' && <Materials materials={materiales} setMaterials={setMateriales} />}
+        {view === 'inicio' && 
+          <Dashboard 
+            maniquies={maniquies} 
+            stockDisponible={stockDisponible} 
+            />
+        }
+        
+        {view === 'colores' && 
+          <Colors 
+            colors={colores} 
+            setColors={setColores} 
+            />
+        }
+
+        {view === 'materiales' &&
+          <Materials materials={materiales} 
+            setMaterials={setMateriales} 
+          />
+        }
       </main>
 
       {showPiezaForm && (
         <PiezaForm
-          tipo={tipoPieza}
-          piezaEditar={piezaEditar}
-          onClose={() => setShowPiezaForm(false)}
-          onSave={handleSavePieza}
-          materiales={materiales}
-          colores={colores}
-          modelosPieza={modelosPieza}
-          modelosExtremidad={modelosExtremidad}
-        />
+        tipo={tipoPieza}
+        piezaEditar={piezaEditar}
+        onClose={() => setShowPiezaForm(false)}
+        onSave={handleSavePieza}
+        materiales={materiales}
+        colores={colores}
+        modelosPieza={modelosPieza}
+        modelosExtremidad={modelosExtremidad}
+        cabezas={cabezas}
+        torsos={torsos}
+        brazos={brazos}
+        piernas={piernas}
+      />
       )}
     </div>
   )
