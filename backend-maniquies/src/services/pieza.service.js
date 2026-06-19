@@ -17,19 +17,6 @@ const updatePieza = async (tipo, id, data) => {
   return update(tipo, id, data)
 }
 
-const deletePieza = async (tipo, id) => {
-  const pieza = await findById(tipo, id)
-  if (!pieza) throw new Error('Pieza no encontrada')
-  
-  // Validar si la pieza está en uso por algún maniquí
-  const estaEnUso = await verificarSiEstaEnUso(tipo, id)
-  if (estaEnUso) {
-    throw new Error('No se puede eliminar la pieza porque está siendo usada por un maniquí')
-  }
-  
-  return deleteElement(tipo, id)
-}
-
 // Función auxiliar para verificar si una pieza está en uso
 const verificarSiEstaEnUso = async (tipo, id) => {
   let query = ''
@@ -55,6 +42,19 @@ const verificarSiEstaEnUso = async (tipo, id) => {
   const [rows] = await connection.query(query, params)
   
   return rows[0].count > 0
+}
+
+const deletePieza = async (tipo, id) => {
+  const pieza = await findById(tipo, id)
+  if (!pieza) throw new Error('Pieza no encontrada')
+  
+  // Valida si la pieza está en uso
+  const estaEnUso = await verificarSiEstaEnUso(tipo, id)
+  if (estaEnUso) {
+    throw new Error('No se puede eliminar la pieza porque está siendo usada por un maniquí')
+  }
+  
+  return deleteElement(tipo, id)
 }
 
 export default { getAllPiezas, getPiezaById, createPieza, updatePieza, deletePieza }

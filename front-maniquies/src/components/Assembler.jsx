@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function Assembler({ cabezas, torsos, brazos, piernas, modelosPieza, modelosExtremidad, materiales, colores, maniquies, onAssemble }) {
+function Assembler({ cabezas, torsos, brazos, piernas, modelosPieza, modelosExtremidad, materiales, colores, maniquies, onAssemble, showNotification }) {
   const [selection, setSelection] = useState({
     id_cabeza: null,
     id_torso: null,
@@ -75,7 +75,7 @@ function Assembler({ cabezas, torsos, brazos, piernas, modelosPieza, modelosExtr
 
   const handleAssemble = () => {
     if (Object.values(selection).includes(null)) {
-      return alert('Debés completar todas las piezas')
+      return showNotification ('Debés completar todas las piezas')
     }
     onAssemble(selection)
     setSelection({

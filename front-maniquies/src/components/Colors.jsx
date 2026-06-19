@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { catalogoAPI } from '../api.js'
 
-function Colors({ colors, setColors }) {
+function Colors({ colors, setColors, showNotification }) {
   const [newColorName, setNewColorName] = useState('')
 
   const handleAdd = async (e) => {
@@ -18,7 +18,7 @@ function Colors({ colors, setColors }) {
       setNewColorName('')
     } catch (err) {
       console.error(err)
-      alert('Error al crear color')
+      showNotification ('Error al crear color')
     }
   }
 
@@ -28,7 +28,7 @@ function Colors({ colors, setColors }) {
       setColors(colors.filter(c => c.id_color !== id))
     } catch (err) {
       console.error(err)
-      alert('Error al eliminar color')
+      showNotification ('Error al eliminar color')
     }
   }
 

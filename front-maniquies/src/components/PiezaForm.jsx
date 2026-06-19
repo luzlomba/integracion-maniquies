@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, cabezas, torsos, brazos, piernas }) {
+function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, cabezas, torsos, brazos, piernas, showNotification }) {
   const [formData, setFormData] = useState({
     nro_serie: '',
     fecha_fabricacion: new Date().toISOString().split('T')[0],
@@ -84,20 +84,19 @@ function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, ca
     const handleSubmit = async (e) => {
   e.preventDefault()
   if (!formData.id_color || !formData.id_material || !formData.fecha_fabricacion) {
-    alert('Por favor completá todos los campos obligatorios')
+    showNotification ('Por favor completá todos los campos obligatorios')
     return
   }
 
   if (esExtremidad && !formData.lado) {
-    alert('Por favor seleccioná el lado (izquierdo/derecho)')
+    showNotification ('Por favor seleccioná el lado (izquierdo/derecho)')
     return
   }
 
   setLoading(true)
 
   try {
-    // Enviar TODOS los datos al App.jsx (incluyendo color, material, talle, género, lado)
-    // El App.jsx se encargará de buscar/crear el modelo automáticamente
+    // Enviar todos los datos al App.jsx y se encarga de buscar/crear el modelo
     const datosParaEnviar = {
       nro_serie: formData.nro_serie,
       fecha_fabricacion: formData.fecha_fabricacion,
@@ -112,7 +111,7 @@ function PiezaForm({ tipo, piezaEditar, onClose, onSave, materiales, colores, ca
     await onSave(datosParaEnviar)
   } catch (error) {
     console.error('Error:', error)
-    alert('Error al guardar la pieza')
+    showNotification ('Error al guardar la pieza')
   } finally {
     setLoading(false)
   }

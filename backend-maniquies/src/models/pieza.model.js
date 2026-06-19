@@ -1,6 +1,5 @@
 import connection from '../db/dbConnect.js'
 
-// Helper para mapear el tipo de ruta al nombre real de la tabla y su ID
 const getTableInfo = (tipo) => {
   const map = {
     'cabezas': { table: 'cabeza', idField: 'id_cabeza' },
@@ -26,8 +25,6 @@ export const findById = async (tipo, id) => {
 export const create = async (tipo, data) => {
   const { table, idField } = getTableInfo(tipo)
   
-  // NOTA: Por ahora insertamos los datos básicos. 
-  // Más adelante veremos cómo generar el id_modelo automáticamente.
   const [result] = await connection.execute(
     `INSERT INTO ${table} (tipo, nro_serie, fecha_fabricacion, id_modelo) 
      VALUES (?, ?, ?, ?)`,

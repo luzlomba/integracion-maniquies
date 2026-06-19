@@ -22,7 +22,8 @@ function PiezaFila({ pieza, onEdit, onDelete }) {
         <button
           onClick={() => onEdit(pieza)}
           className="btn-action btn-edit"
-          title="Editar pieza"
+          title={estaEnUso ? 'No se puede editar una pieza en uso' : 'Editar pieza'}
+          disabled={estaEnUso}
         >
           Editar
         </button>

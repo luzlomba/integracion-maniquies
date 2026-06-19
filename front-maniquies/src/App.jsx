@@ -9,8 +9,12 @@ import Dashboard from './components/Dashboard'
 import PiezaForm from './components/PiezaForm'
 import './App.css'
 import { maniquiAPI, piezaAPI, catalogoAPI, modelosAPI } from './api'
+import Notification from './components/Notification'
+import ConfirmModal from './components/ConfirmModal'
+
 
 function App() {
+
   const [filter, setFilter] = useState('todas')
   const [view, setView] = useState('inicio')
   
@@ -108,13 +112,35 @@ function App() {
   const allPieces = [...cabezas, ...torsos, ...brazos, ...piernas].map(getPieceData)
   const filteredPieces = filter === 'todas' ? allPieces : allPieces.filter(p => p.tipo === filter)
 
+  const [notification, setNotification] = useState('')
+
+  const showNotification = (message) => {
+    setNotification(message)
+
+    setTimeout(() => {
+      setNotification('')
+    }, 3000)
+  }
+
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    message: '',
+    onConfirm: null
+  })
+
   const handleDeleteManiqui = async (id) => {
-    if (window.confirm("¿Desarmar este maniquí?")) {
-      try {
-        await maniquiAPI.delete(id)
-        setManiquies(maniquies.filter(m => m.id_maniqui !== id))
-      } catch { alert('Error al eliminar el maniquí') }
-    }
+    setConfirmModal({
+      open: true,
+      message: '¿Desarmar este maniquí?',
+      onConfirm: async () => {
+        try {
+          await maniquiAPI.delete(id)
+          setManiquies(maniquies.filter(m => m.id_maniqui !== id))
+        } catch {
+          showNotification('Error al eliminar el maniquí')
+        }
+      }
+    })
   }
 
   const handleUpdateManiqui = async (maniquiActualizado) => {
@@ -134,7 +160,7 @@ function App() {
       ))
     } catch (err) {
       console.error('Error actualizando maniquí:', err)
-      alert('Error al actualizar el maniquí en la base de datos')
+      showNotification ('Error al actualizar el maniquí en la base de datos')
     }
   }
 
@@ -142,24 +168,48 @@ function App() {
     try {
       const nuevo = await maniquiAPI.create(selection)
       setManiquies([...maniquies, nuevo])
-      alert('¡Maniquí ensamblado!')
-    } catch { alert('Error al crear') }
+      showNotification('¡Maniquí ensamblado!')
+    } catch { showNotification('Error al crear') }
   }
 
   const handleNewPieza = (tipo) => { setTipoPieza(tipo || 'cabeza'); setPiezaEditar(null); setShowPiezaForm(true) }
   const handleEditPieza = (pieza) => { setTipoPieza(pieza.tipo); setPiezaEditar(pieza); setShowPiezaForm(true) }
 
   const handleDeletePieza = async (pieza) => {
-    if (window.confirm(`¿Eliminar ${pieza.tipo} ${pieza.nro_serie}?`)) {
-      try {
-        const id = pieza.id_cabeza || pieza.id_torso || pieza.id_brazo || pieza.id_pierna
-        const tipo = pieza.tipo + 's'
-        if (tipo === 'cabezas') { await piezaAPI.deleteCabeza(id); setCabezas(cabezas.filter(p => p.id_cabeza !== id)) }
-        else if (tipo === 'torsos') { await piezaAPI.deleteTorso(id); setTorsos(torsos.filter(p => p.id_torso !== id)) }
-        else if (tipo === 'brazos') { await piezaAPI.deleteBrazo(id); setBrazos(brazos.filter(p => p.id_brazo !== id)) }
-        else if (tipo === 'piernas') { await piezaAPI.deletePierna(id); setPiernas(piernas.filter(p => p.id_pierna !== id)) }
-      } catch (err) { alert(err.message || 'Error al eliminar') }
-    }
+    setConfirmModal({
+      open: true,
+      message: `¿Eliminar ${pieza.tipo} ${pieza.nro_serie}?`,
+      onConfirm: async () => {
+        try {
+          const id =
+            pieza.id_cabeza ||
+            pieza.id_torso ||
+            pieza.id_brazo ||
+            pieza.id_pierna
+
+          const tipo = pieza.tipo + 's'
+
+          if (tipo === 'cabezas') {
+            await piezaAPI.deleteCabeza(id)
+            setCabezas(cabezas.filter(p => p.id_cabeza !== id))
+          }
+          else if (tipo === 'torsos') {
+            await piezaAPI.deleteTorso(id)
+            setTorsos(torsos.filter(p => p.id_torso !== id))
+          }
+          else if (tipo === 'brazos') {
+            await piezaAPI.deleteBrazo(id)
+            setBrazos(brazos.filter(p => p.id_brazo !== id))
+          }
+          else if (tipo === 'piernas') {
+            await piezaAPI.deletePierna(id)
+            setPiernas(piernas.filter(p => p.id_pierna !== id))
+          }
+        } catch (err) {
+          showNotification(err.message || 'Error al eliminar')
+        }
+      }
+    })
   }
 
   const handleSavePieza = async (formData) => {
@@ -218,7 +268,7 @@ function App() {
       setPiezaEditar(null)
     } catch (err) {
       console.error('Error guardando pieza:', err)
-      alert('Error al guardar la pieza en la base de datos')
+      showNotification ('Error al guardar la pieza en la base de datos')
     }
   }
 
@@ -276,26 +326,30 @@ function App() {
             maniquies={maniquies}
             setManiquies={setManiquies}
             onAssemble={handleAssembleManiqui}
+            showNotification={showNotification}
           />
         )}
 
         {view === 'inicio' && 
           <Dashboard 
             maniquies={maniquies} 
-            stockDisponible={stockDisponible} 
+            stockDisponible={stockDisponible}
+            showNotification={showNotification} 
             />
         }
         
         {view === 'colores' && 
           <Colors 
             colors={colores} 
-            setColors={setColores} 
+            setColors={setColores}
+            showNotification={showNotification} 
             />
         }
 
         {view === 'materiales' &&
           <Materials materials={materiales} 
             setMaterials={setMateriales} 
+            showNotification={showNotification}
           />
         }
       </main>
@@ -314,8 +368,35 @@ function App() {
         torsos={torsos}
         brazos={brazos}
         piernas={piernas}
+        showNotification={showNotification}
       />
       )}
+
+      <Notification
+        message={notification}
+        onClose={() => showNotification('')}
+      />  
+
+      <ConfirmModal
+        open={confirmModal.open}
+        message={confirmModal.message}
+        onConfirm={() => {
+          confirmModal.onConfirm()
+          setConfirmModal({
+            open: false,
+            message: '',
+            onConfirm: null
+          })
+        }}
+        onCancel={() =>
+          setConfirmModal({
+            open: false,
+            message: '',
+            onConfirm: null
+          })
+        }
+      />
+
     </div>
   )
 }

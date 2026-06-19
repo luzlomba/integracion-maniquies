@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { catalogoAPI } from '../api.js'
 
-function Materials({ materials, setMaterials }) {
+function Materials({ materials, setMaterials, showNotification }) {
   const [newMaterialName, setNewMaterialName] = useState('')
 
   const handleAdd = async (e) => {
@@ -18,7 +18,7 @@ function Materials({ materials, setMaterials }) {
       setNewMaterialName('')
     } catch (err) {
       console.error(err)
-      alert('Error al crear material')
+      showNotification('Error al crear material')
     }
   }
 
@@ -28,7 +28,7 @@ function Materials({ materials, setMaterials }) {
       setMaterials(materials.filter(m => m.id_material !== id))
     } catch (err) {
       console.error(err)
-      alert('Error al eliminar material')
+      showNotification ('Error al eliminar material')
     }
 }
 

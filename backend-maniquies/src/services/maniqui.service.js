@@ -10,7 +10,7 @@ const getManiquiById = async (id) => {
 }
 
 const createManiqui = async (data) => {
-  // Validar que existan todas las piezas (Lógica de negocio)
+  // Validar que existan todas las piezas
   const cabeza = await findPieza('cabezas', data.id_cabeza)
   if (!cabeza) throw new Error('Cabeza no encontrada')
   const torso = await findPieza('torsos', data.id_torso)
